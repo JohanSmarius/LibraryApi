@@ -12,7 +12,7 @@ public static class AuthorsEndpoints
     {
         public RouteGroupBuilder MapAuthorsEndpoints()
         {
-            var group = routes.MapGroup("/api/authors")
+            var group = routes.MapGroup("/authors")
                 .WithTags("Authors");
 
             group.MapGet("", GetAuthors)

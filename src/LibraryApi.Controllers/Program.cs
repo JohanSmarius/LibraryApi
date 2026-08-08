@@ -1,9 +1,22 @@
+using LibraryApi.Controllers.Authentication;
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var apiKey = builder.Configuration["Authentication:ApiKey"]
+    ?? throw new InvalidOperationException(
+        "The API key is not configured. Store it with: dotnet user-secrets set \"Authentication:ApiKey\" \"<key>\"");
+
+builder.Services
+    .AddAuthentication(ApiKeyAuthenticationDefaults.AuthenticationScheme)
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationDefaults.AuthenticationScheme,
+        options => options.ApiKey = apiKey);
+builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi(options =>
 {
@@ -15,6 +28,31 @@ builder.Services.AddOpenApi(options =>
             Version = "v1",
             Description = "A .NET 10 Minimal API for managing authors and books."
         };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??=
+            new Dictionary<string, IOpenApiSecurityScheme>(StringComparer.Ordinal);
+        document.Components.SecuritySchemes[ApiKeyAuthenticationDefaults.AuthenticationScheme] =
+            new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.ApiKey,
+                In = ParameterLocation.Header,
+                Name = ApiKeyAuthenticationDefaults.HeaderName,
+                Description = $"API key supplied in the {ApiKeyAuthenticationDefaults.HeaderName} header."
+            };
+
+        foreach (var operation in document.Paths.Values
+                     .SelectMany(path =>
+                         path.Operations?.Values.AsEnumerable() ?? Enumerable.Empty<OpenApiOperation>()))
+        {
+            operation.Security ??= [];
+            operation.Security.Add(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(
+                    ApiKeyAuthenticationDefaults.AuthenticationScheme,
+                    document)] = []
+            });
+        }
 
         return Task.CompletedTask;
     });
@@ -49,8 +87,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.MapAuthorsEndpoints();
-app.MapBooksEndpoints();
+var api = app.MapGroup("/api")
+    .RequireAuthorization();
+
+api.MapAuthorsEndpoints();
+api.MapBooksEndpoints();
 
 app.Run();

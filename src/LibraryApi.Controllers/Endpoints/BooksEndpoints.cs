@@ -12,7 +12,7 @@ public static class BooksEndpoints
     {
         public RouteGroupBuilder MapBooksEndpoints()
         {
-            var group = routes.MapGroup("/api/books")
+            var group = routes.MapGroup("/books")
                 .WithTags("Books");
 
             group.MapGet("", GetBooks)

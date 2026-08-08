@@ -6,7 +6,8 @@ Entity Framework Core.
 ## Architecture
 
 - Feature-based endpoint modules in `Endpoints/`
-- Route groups for author, nested author-book, and flat book routes
+- A secured `/api` route group with nested feature route groups
+- API-key authentication inherited by every API endpoint
 - `LibraryDbContext` injected directly into endpoint handlers
 - DataAnnotations request validation through .NET 10 `AddValidation()`
 - Strongly typed HTTP results for accurate OpenAPI response metadata
@@ -49,6 +50,8 @@ Requires the .NET 10 SDK.
 
 ```bash
 dotnet restore
+dotnet user-secrets set "Authentication:ApiKey" "replace-with-a-secure-random-key" \
+  --project src/LibraryApi.Controllers
 dotnet run --project src/LibraryApi.Controllers
 ```
 
@@ -59,6 +62,14 @@ In Development:
 
 The SQLite database is migrated and seeded automatically on startup with
 three authors and seven books.
+
+All API endpoints require the key in the `X-API-Key` request header. Scalar
+uses the OpenAPI security scheme to authorize requests with this header.
+
+```bash
+curl -H "X-API-Key: replace-with-a-secure-random-key" \
+  http://localhost:5080/api/authors
+```
 
 ## Reset the local database
 
