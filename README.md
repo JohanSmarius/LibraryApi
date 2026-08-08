@@ -66,4 +66,4 @@ dotnet run
 ```
 
 Swagger UI opens automatically at `/swagger`. The database is seeded
-automatically on first run (four authors, eight books).
+automatically on first run (three authors, seven books).
