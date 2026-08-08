@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
+using LibraryApi.Controllers.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -26,6 +27,8 @@ var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
 
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlite(connectionString));
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 

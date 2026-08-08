@@ -1,8 +1,6 @@
-using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.Entities;
+using LibraryApi.Controllers.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApi.Controllers.Endpoints;
 
@@ -34,38 +32,23 @@ public static class AuthorBooksEndpoints
 
     private static async Task<Results<Ok<List<BookDto>>, NotFound>> GetBooksForAuthor(
         int authorId,
-        LibraryDbContext db,
+        IBookService bookService,
         CancellationToken cancellationToken)
     {
-        var authorExists = await db.Authors
-            .AsNoTracking()
-            .AnyAsync(author => author.Id == authorId, cancellationToken);
+        var books = await bookService.GetBooksForAuthorAsync(authorId, cancellationToken);
 
-        if (!authorExists)
-        {
-            return TypedResults.NotFound();
-        }
-
-        var books = await db.Books
-            .AsNoTracking()
-            .Where(book => book.AuthorId == authorId)
-            .Select(book => book.ToDto())
-            .ToListAsync(cancellationToken);
-
-        return TypedResults.Ok(books);
+        return books is null
+            ? TypedResults.NotFound()
+            : TypedResults.Ok(books);
     }
 
     private static async Task<Results<Ok<BookDto>, NotFound>> GetBookForAuthor(
         int authorId,
         int bookId,
-        LibraryDbContext db,
+        IBookService bookService,
         CancellationToken cancellationToken)
     {
-        var book = await db.Books
-            .AsNoTracking()
-            .Where(book => book.Id == bookId && book.AuthorId == authorId)
-            .Select(book => book.ToDto())
-            .FirstOrDefaultAsync(cancellationToken);
+        var book = await bookService.GetBookForAuthorAsync(authorId, bookId, cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -75,29 +58,21 @@ public static class AuthorBooksEndpoints
     private static async Task<Results<CreatedAtRoute<BookDto>, NotFound>> CreateBookForAuthor(
         int authorId,
         CreateBookDto request,
-        LibraryDbContext db,
+        IBookService bookService,
         CancellationToken cancellationToken)
     {
-        var author = await db.Authors.FindAsync([authorId], cancellationToken);
-        if (author is null)
+        var book = await bookService.CreateBookForAuthorAsync(
+            authorId,
+            request,
+            cancellationToken);
+
+        if (book is null)
         {
             return TypedResults.NotFound();
         }
 
-        var book = new Book
-        {
-            Title = request.Title,
-            PublicationYear = request.PublicationYear,
-            Isbn = request.Isbn,
-            AuthorId = authorId,
-            Author = author
-        };
-
-        db.Books.Add(book);
-        await db.SaveChangesAsync(cancellationToken);
-
         return TypedResults.CreatedAtRoute(
-            book.ToDto(),
+            book,
             nameof(GetBookForAuthor),
             new { authorId, bookId = book.Id });
     }

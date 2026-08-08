@@ -1,8 +1,6 @@
-using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.Entities;
+using LibraryApi.Controllers.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApi.Controllers.Endpoints;
 
@@ -44,27 +42,20 @@ public static class AuthorsEndpoints
     }
 
     private static async Task<Ok<List<AuthorDto>>> GetAuthors(
-        LibraryDbContext db,
+        IAuthorService authorService,
         CancellationToken cancellationToken)
     {
-        var authors = await db.Authors
-            .AsNoTracking()
-            .Select(author => author.ToDto())
-            .ToListAsync(cancellationToken);
+        var authors = await authorService.GetAuthorsAsync(cancellationToken);
 
         return TypedResults.Ok(authors);
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(
         int id,
-        LibraryDbContext db,
+        IAuthorService authorService,
         CancellationToken cancellationToken)
     {
-        var author = await db.Authors
-            .AsNoTracking()
-            .Where(author => author.Id == id)
-            .Select(author => author.ToDto())
-            .FirstOrDefaultAsync(cancellationToken);
+        var author = await authorService.GetAuthorAsync(id, cancellationToken);
 
         return author is null
             ? TypedResults.NotFound()
@@ -73,61 +64,39 @@ public static class AuthorsEndpoints
 
     private static async Task<CreatedAtRoute<AuthorDto>> CreateAuthor(
         CreateAuthorDto request,
-        LibraryDbContext db,
+        IAuthorService authorService,
         CancellationToken cancellationToken)
     {
-        var author = new Author
-        {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Country = request.Country
-        };
-
-        db.Authors.Add(author);
-        await db.SaveChangesAsync(cancellationToken);
-
-        var dto = author.ToDto();
-        return TypedResults.CreatedAtRoute(dto, nameof(GetAuthor), new { id = author.Id });
+        var author = await authorService.CreateAuthorAsync(request, cancellationToken);
+        return TypedResults.CreatedAtRoute(author, nameof(GetAuthor), new { id = author.Id });
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> UpdateAuthor(
         int id,
         UpdateAuthorDto request,
-        LibraryDbContext db,
+        IAuthorService authorService,
         CancellationToken cancellationToken)
     {
-        var author = await db.Authors
-            .Include(author => author.Books)
-            .FirstOrDefaultAsync(author => author.Id == id, cancellationToken);
+        var author = await authorService.UpdateAuthorAsync(id, request, cancellationToken);
 
         if (author is null)
         {
             return TypedResults.NotFound();
         }
 
-        author.FirstName = request.FirstName;
-        author.LastName = request.LastName;
-        author.Country = request.Country;
-
-        await db.SaveChangesAsync(cancellationToken);
-
-        var dto = author.ToDto();
-        return TypedResults.Ok(dto);
+        return TypedResults.Ok(author);
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteAuthor(
         int id,
-        LibraryDbContext db,
+        IAuthorService authorService,
         CancellationToken cancellationToken)
     {
-        var author = await db.Authors.FindAsync([id], cancellationToken);
-        if (author is null)
+        var deleted = await authorService.DeleteAuthorAsync(id, cancellationToken);
+        if (!deleted)
         {
             return TypedResults.NotFound();
         }
-
-        db.Authors.Remove(author);
-        await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.NoContent();
     }
