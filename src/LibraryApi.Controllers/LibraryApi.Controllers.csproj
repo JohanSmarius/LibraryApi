@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>LibraryApi.Controllers</RootNamespace>
+    <UserSecretsId>library-api-controllers-talk</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Swashbuckle is the deliberate choice for the STARTING solution.
+         The minimal API version of this talk swaps this out for the
+         built-in Microsoft.AspNetCore.OpenApi package (.NET 10) instead. -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
