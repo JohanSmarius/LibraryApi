@@ -1,23 +1,25 @@
 using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Endpoints;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-
-// Swashbuckle for the STARTING solution. The minimal API version of this
-// project swaps this block for builder.Services.AddOpenApi() (built into
-// .NET 10) instead.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+builder.Services.AddOpenApi(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    options.AddDocumentTransformer((document, _, _) =>
     {
-        Title = "Library API (Controllers)",
-        Version = "v1",
-        Description = "Starting solution: controller-based Web API with Authors and Books, ready to be migrated to minimal APIs."
+        document.Info = new()
+        {
+            Title = "Library API",
+            Version = "v1",
+            Description = "A .NET 10 Minimal API for managing authors and books."
+        };
+
+        return Task.CompletedTask;
     });
 });
+builder.Services.AddValidation();
 
 var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
     ?? "Data Source=library.db";
@@ -40,12 +42,15 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options => options
+        .WithTitle("Library API")
+        .DisableAgent());
 }
 
 app.UseHttpsRedirection();
 
-app.MapControllers();
+app.MapAuthorsEndpoints();
+app.MapBooksEndpoints();
 
 app.Run();

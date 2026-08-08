@@ -1,30 +1,29 @@
-# Library API — Controller-Based Starting Solution
+# Library API - .NET 10 Minimal API
 
-Starting point for the talk *"Refactoring an ASP.NET Core WebAPI Controller
-based API to a minimal API"*. This is the **before** state — a working,
-realistic, deliberately unlayered controller-based Web API. The live-coding
-portion of the talk migrates this to a minimal API.
+A .NET 10 Minimal API for managing authors and books with SQLite and
+Entity Framework Core.
 
-## What's here
+## Architecture
 
-- **.NET 10**, ASP.NET Core Web API with controllers
-- **SQLite** via EF Core, with real migrations (see setup below)
-- `LibraryDbContext` injected **directly into controllers** — no
-  repository or service layer. This is intentional: most real-world
-  controller APIs look like this, and introducing a cleanup step (e.g. an
-  endpoint filter for validation) during the minimal API migration is part
-  of the talk's narrative, not a starting assumption.
-- **DTOs already in place** for requests/responses, so the talk stays
-  focused on the routing/architecture migration and doesn't also become a
-  talk about API contract design.
-- **Swashbuckle** for OpenAPI/Swagger — deliberately swapped for the
-  built-in `Microsoft.AspNetCore.OpenApi` package in the minimal API
-  version, to show that migration too.
+- Feature-based endpoint modules in `Endpoints/`
+- Route groups for author, nested author-book, and flat book routes
+- `LibraryDbContext` injected directly into endpoint handlers
+- DataAnnotations request validation through .NET 10 `AddValidation()`
+- Strongly typed HTTP results for accurate OpenAPI response metadata
+- Built-in `Microsoft.AspNetCore.OpenApi` generation using OpenAPI 3.1
+- Scalar interactive API documentation in Development
+- EF Core migrations and deterministic seed data applied on startup
+
+The project and root namespace retain the `LibraryApi.Controllers` name to
+avoid an unrelated project rename, but the application no longer uses MVC
+controllers.
 
 ## Domain
 
 - `Author` (Id, FirstName, LastName, Country) has many `Book`
 - `Book` (Id, Title, PublicationYear, Isbn, AuthorId) belongs to one `Author`
+
+Deleting an author cascade deletes all books that belong to that author.
 
 ## Endpoints
 
@@ -32,38 +31,39 @@ portion of the talk migrates this to a minimal API.
 |---|---|---|
 | GET | `/api/authors` | list |
 | GET | `/api/authors/{id}` | single, 404 branch |
-| POST | `/api/authors` | validated via data annotations |
+| POST | `/api/authors` | validated |
 | PUT | `/api/authors/{id}` | validated update |
 | DELETE | `/api/authors/{id}` | cascade deletes the author's books |
-| GET | `/api/authors/{authorId}/books` | **nested** |
-| GET | `/api/authors/{authorId}/books/{bookId}` | **nested** |
-| POST | `/api/authors/{authorId}/books` | **nested**, validated |
-| GET | `/api/books` | **flat** list |
-| GET | `/api/books/{id}` | **flat** single, 404 branch |
-| POST | `/api/books` | **flat**, validated |
-| PUT | `/api/books/{id}` | **flat**, validated |
-| DELETE | `/api/books/{id}` | **flat** |
+| GET | `/api/authors/{authorId}/books` | nested list |
+| GET | `/api/authors/{authorId}/books/{bookId}` | nested single |
+| POST | `/api/authors/{authorId}/books` | nested, validated |
+| GET | `/api/books` | flat list |
+| GET | `/api/books/{id}` | flat single, 404 branch |
+| POST | `/api/books` | flat, validated |
+| PUT | `/api/books/{id}` | flat, validated |
+| DELETE | `/api/books/{id}` | flat |
 
-## Setup (do this once, before the talk)
+## Run locally
 
-This project was generated without running the .NET SDK, so the EF Core
-migration has **not** been generated yet — generating one by hand risks it
-not matching your exact installed EF Core version, which is worse than no
-migration at all for a live demo. Run:
+Requires the .NET 10 SDK.
 
 ```bash
-./scripts/setup.sh
+dotnet restore
+dotnet run --project src/LibraryApi.Controllers
 ```
 
-This restores packages, runs `dotnet ef migrations add InitialCreate`
-against your local EF Core version, and applies it to create `library.db`.
+In Development:
 
-Then:
+- Scalar UI: `/scalar`
+- OpenAPI document: `/openapi/v1.json`
+
+The SQLite database is migrated and seeded automatically on startup with
+three authors and seven books.
+
+## Reset the local database
 
 ```bash
-cd src/LibraryApi.Controllers
-dotnet run
+./scripts/reset-db.sh
 ```
 
-Swagger UI opens automatically at `/swagger`. The database is seeded
-automatically on first run (three authors, seven books).
+The next application start recreates, migrates, and seeds `library.db`.
