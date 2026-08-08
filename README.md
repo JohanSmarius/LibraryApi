@@ -62,8 +62,17 @@ Then:
 
 ```bash
 cd src/LibraryApi.Controllers
+dotnet user-secrets set "Authentication:ApiKey" "replace-with-a-secure-random-key"
 dotnet run
 ```
 
 Swagger UI opens automatically at `/swagger`. The database is seeded
 automatically on first run (three authors, seven books).
+
+All API endpoints require the key in the `X-API-Key` request header. In
+Swagger UI, select **Authorize** and enter the key. For example:
+
+```bash
+curl -H "X-API-Key: replace-with-a-secure-random-key" \
+  http://localhost:5080/api/authors
+```
