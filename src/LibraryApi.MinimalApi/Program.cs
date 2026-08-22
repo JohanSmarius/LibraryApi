@@ -1,5 +1,6 @@
 using LibraryApi.MinimalApi.Data;
 using LibraryApi.MinimalApi.Dtos;
+using LibraryApi.MinimalApi.Handlers;
 using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
 
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlite(connectionString));
+
+builder.Services.AddTransient<IAuthorHandler, AuthorHandler>();
 
 
 // Add services to the container.
@@ -27,16 +30,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/authors", async (LibraryDbContext db) =>
-{
-    var authors = await db.Authors
-        .Include(a => a.Books)
-        .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
-        .ToListAsync();
-
-    return Results.Ok(authors);
-}).Produces<List<AuthorDto>>();
+app.MapGet("/api/authors", async ([FromServices] IAuthorHandler handler) => await handler.GetAuthorsAsync())
+    .Produces<List<AuthorDto>>();
 
 
 app.Run();
+
+
+
 
