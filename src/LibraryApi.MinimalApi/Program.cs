@@ -1,6 +1,7 @@
 using LibraryApi.MinimalApi.Data;
 using LibraryApi.MinimalApi.Dtos;
 using Microsoft.AspNetCore.Builder.Extensions;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,13 +32,13 @@ app.MapGet("/api/authors", GetAuthorsAsync).Produces<List<AuthorDto>>();
 
 app.Run();
 
-static async Task<IResult> GetAuthorsAsync(LibraryDbContext db)
+static async Task<Ok<List<AuthorDto>>> GetAuthorsAsync(LibraryDbContext db)
 {
     var result = await db.Authors
         .Include(a => a.Books)
         .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
         .ToListAsync();
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 }
 
 
