@@ -54,27 +54,4 @@ app.MapGet("/api/authors/{id}", async Task<Results<Ok<AuthorDto>, NotFound>> (in
 
 app.Run();
 
-static async Task<Ok<List<AuthorDto>>> GetAuthorsAsync(LibraryDbContext db)
-{
-    var result = await db.Authors
-        .Include(a => a.Books)
-        .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
-        .ToListAsync();
-    return TypedResults.Ok(result);
-}
-
-static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(int id, LibraryDbContext db)
-{
-    var author = await db.Authors
-        .Include(a => a.Books)
-        .FirstOrDefaultAsync(a => a.Id == id);
-
-    if (author is null)
-    {
-        return TypedResults.NotFound();
-    }
-
-    return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
-}
-
 
