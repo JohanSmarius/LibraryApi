@@ -29,25 +29,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/authors", GetAuthorsAsync);
-
-app.MapGet("/api/authors/{id}", GetAuthor);
-
-app.MapPost("/api/authors", AddAuthorAsync);
-
-
-app.Run();
-
-static async Task<Ok<List<AuthorDto>>> GetAuthorsAsync(LibraryDbContext db)
+app.MapGet("/api/authors", async (LibraryDbContext db) =>
 {
     var result = await db.Authors
         .Include(a => a.Books)
         .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
         .ToListAsync();
     return TypedResults.Ok(result);
-}
+});
 
-static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(int id, LibraryDbContext db)
+app.MapGet("/api/authors/{id}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, LibraryDbContext db) =>
 {
     var author = await db.Authors
         .Include(a => a.Books)
@@ -59,9 +50,9 @@ static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(int id, LibraryDbC
     }
 
     return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
-}
+});
 
-static async Task<Created<AuthorDto>> AddAuthorAsync([FromBody] CreateAuthorDto authorToAdd, [FromServices] LibraryDbContext db)
+app.MapPost("/api/authors", async ([FromBody] CreateAuthorDto authorToAdd, [FromServices] LibraryDbContext db) =>
 {
     var author = new Author
     {
@@ -75,7 +66,7 @@ static async Task<Created<AuthorDto>> AddAuthorAsync([FromBody] CreateAuthorDto 
  
     var dto = new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, 0);
     return TypedResults.Created($"/api/authors/{author.Id}", dto);
-}
+});
 
-
+app.Run();
 
