@@ -1,6 +1,7 @@
 using LibraryApi.MinimalApi.Data;
 using LibraryApi.MinimalApi.Dtos;
 using LibraryApi.MinimalApi.Entities;
+using LibraryApi.MinimalApi.Services;
 using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddValidation();
 
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -33,43 +36,19 @@ app.UseHttpsRedirection();
 
 var group = app.MapGroup("/api/authors");
 
-group.MapGet("", async (LibraryDbContext db) =>
-{
-    var result = await db.Authors
-        .Include(a => a.Books)
-        .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
-        .ToListAsync();
-    return TypedResults.Ok(result);
-});
-
-group.MapGet("{id}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, LibraryDbContext db) =>
-{
-    var author = await db.Authors
-        .Include(a => a.Books)
-        .FirstOrDefaultAsync(a => a.Id == id);
-
-    if (author is null)
-    {
-        return TypedResults.NotFound();
-    }
-
-    return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
-});
-
-group.MapPost("", async ([FromBody] CreateAuthorDto authorToAdd, [FromServices] LibraryDbContext db) =>
-{
-    var author = new Author
-    {
-        FirstName = authorToAdd.FirstName,
-        LastName = authorToAdd.LastName,
-        Country = authorToAdd.Country
-    };
+group.MapGet("", async (IAuthorService service) =>
+    TypedResults.Ok(await service.GetAuthorsAsync()));
  
-    db.Authors.Add(author);
-    await db.SaveChangesAsync();
+group.MapGet("/{id:int}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, IAuthorService service) =>
+{
+    var author = await service.GetAuthorAsync(id);
+    return author is null ? TypedResults.NotFound() : TypedResults.Ok(author);
+});
  
-    var dto = new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, 0);
-    return TypedResults.Created($"/api/authors/{author.Id}", dto);
+group.MapPost("", async (CreateAuthorDto request, IAuthorService service) =>
+{
+    var dto = await service.CreateAuthorAsync(request);
+    return TypedResults.Created($"/api/authors/{dto.Id}", dto);
 });
 
 app.Run();
