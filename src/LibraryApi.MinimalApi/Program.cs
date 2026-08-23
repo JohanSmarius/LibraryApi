@@ -1,5 +1,6 @@
 using LibraryApi.MinimalApi.Data;
 using LibraryApi.MinimalApi.Dtos;
+using LibraryApi.MinimalApi.Entities;
 using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +33,9 @@ app.MapGet("/api/authors", GetAuthorsAsync);
 
 app.MapGet("/api/authors/{id}", GetAuthor);
 
+app.MapPost("/api/authors", AddAuthorAsync);
+
+
 app.Run();
 
 static async Task<Ok<List<AuthorDto>>> GetAuthorsAsync(LibraryDbContext db)
@@ -56,5 +60,22 @@ static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(int id, LibraryDbC
 
     return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
 }
+
+static async Task<Created<AuthorDto>> AddAuthorAsync(CreateAuthorDto authorToAdd, LibraryDbContext db)
+{
+    var author = new Author
+    {
+        FirstName = authorToAdd.FirstName,
+        LastName = authorToAdd.LastName,
+        Country = authorToAdd.Country
+    };
+ 
+    db.Authors.Add(author);
+    await db.SaveChangesAsync();
+ 
+    var dto = new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, 0);
+    return TypedResults.Created($"/api/authors/{author.Id}", dto);
+}
+
 
 
