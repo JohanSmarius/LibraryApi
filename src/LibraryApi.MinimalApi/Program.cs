@@ -61,7 +61,7 @@ static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(int id, LibraryDbC
     return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
 }
 
-static async Task<Created<AuthorDto>> AddAuthorAsync(CreateAuthorDto authorToAdd, LibraryDbContext db)
+static async Task<Created<AuthorDto>> AddAuthorAsync([FromBody] CreateAuthorDto authorToAdd, [FromServices] LibraryDbContext db)
 {
     var author = new Author
     {
