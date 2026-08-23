@@ -28,9 +28,29 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/authors", GetAuthorsAsync);
+app.MapGet("/api/authors", async (LibraryDbContext db) =>
+{
+    var authors = await db.Authors
+        .Include(a => a.Books)
+        .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
+        .ToListAsync();
 
-app.MapGet("/api/authors/{id}", GetAuthor);
+    return Results.Ok(authors);
+}).Produces<List<AuthorDto>>();
+
+app.MapGet("/api/authors/{id}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, LibraryDbContext db) =>
+{
+    var author = await db.Authors
+        .Include(a => a.Books)
+        .FirstOrDefaultAsync(a => a.Id == id);
+
+    if (author is null)
+    {
+        return TypedResults.NotFound();
+    }
+
+    return TypedResults.Ok(new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, author.Books.Count));
+});
 
 app.Run();
 
