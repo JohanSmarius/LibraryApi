@@ -29,11 +29,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/authors", GetAuthorsAsync);
+var group = app.MapGroup("/api/authors");
 
-app.MapGet("/api/authors/{id}", GetAuthor);
+group.MapGet("", GetAuthorsAsync);
 
-app.MapPost("/api/authors", AddAuthorAsync);
+group.MapGet("{id}", GetAuthor);
+
+group.MapPost("", AddAuthorAsync);
 
 
 app.Run();
