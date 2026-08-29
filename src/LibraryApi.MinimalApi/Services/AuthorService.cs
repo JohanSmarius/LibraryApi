@@ -12,20 +12,16 @@ public interface IAuthorService
     Task<AuthorDto> CreateAuthorAsync(CreateAuthorDto request);
 }
  
-public class AuthorService : IAuthorService
+public class AuthorService(LibraryDbContext db) : IAuthorService
 {
-    private readonly LibraryDbContext _db;
- 
-    public AuthorService(LibraryDbContext db) => _db = db;
- 
     public async Task<List<AuthorDto>> GetAuthorsAsync() =>
-        await _db.Authors.Include(a => a.Books)
+        await db.Authors.Include(a => a.Books)
             .Select(a => new AuthorDto(a.Id, a.FirstName, a.LastName, a.Country, a.Books.Count))
             .ToListAsync();
  
     public async Task<AuthorDto?> GetAuthorAsync(int id)
     {
-        var author = await _db.Authors.Include(a => a.Books)
+        var author = await db.Authors.Include(a => a.Books)
             .FirstOrDefaultAsync(a => a.Id == id);
  
         return author is null
@@ -42,8 +38,8 @@ public class AuthorService : IAuthorService
             Country = request.Country
         };
  
-        _db.Authors.Add(author);
-        await _db.SaveChangesAsync();
+        db.Authors.Add(author);
+        await db.SaveChangesAsync();
  
         return new AuthorDto(author.Id, author.FirstName, author.LastName, author.Country, 0);
     }
