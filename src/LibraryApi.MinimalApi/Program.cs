@@ -23,6 +23,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddValidation();
 
 builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBookService, BookService>();
 
 var app = builder.Build();
 
@@ -34,21 +35,44 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var group = app.MapGroup("/api/authors");
+var authors = app.MapGroup("/api/authors");
 
-group.MapGet("", async (IAuthorService service) =>
+authors.MapGet("", async (IAuthorService service) =>
     TypedResults.Ok(await service.GetAuthorsAsync()));
  
-group.MapGet("/{id:int}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, IAuthorService service) =>
+authors.MapGet("/{id:int}", async Task<Results<Ok<AuthorDto>, NotFound>> (int id, IAuthorService service) =>
 {
     var author = await service.GetAuthorAsync(id);
     return author is null ? TypedResults.NotFound() : TypedResults.Ok(author);
 });
  
-group.MapPost("", async (CreateAuthorDto request, IAuthorService service) =>
+authors.MapPost("", async (CreateAuthorDto request, IAuthorService service) =>
 {
     var dto = await service.CreateAuthorAsync(request);
     return TypedResults.Created($"/api/authors/{dto.Id}", dto);
 });
+
+var books = authors.MapGroup("/{authorId:int}/books").WithTags("Books");
+ 
+books.MapGet("", async Task<Results<Ok<List<BookDto>>, NotFound>> (int authorId, IBookService service) =>
+{
+    var result = await service.GetBooksForAuthorAsync(authorId);
+    return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
+});
+ 
+books.MapGet("/{bookId:int}", async Task<Results<Ok<BookDto>, NotFound>> (int authorId, int bookId, IBookService service) =>
+{
+    var result = await service.GetBookForAuthorAsync(authorId, bookId);
+    return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
+});
+ 
+books.MapPost("", async Task<Results<Created<BookDto>, NotFound>> (int authorId, CreateBookDto request, IBookService service) =>
+{
+    var result = await service.CreateBookForAuthorAsync(authorId, request);
+    return result is null
+        ? TypedResults.NotFound()
+        : TypedResults.Created($"/api/authors/{authorId}/books/{result.Id}", result);
+});
+
 
 app.Run();
