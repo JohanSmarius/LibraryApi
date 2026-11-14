@@ -1,21 +1,23 @@
-using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
-using Microsoft.EntityFrameworkCore;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.UseCases.Authors;
 
-public class GetAuthorsUseCase(LibraryDbContext db)
+public class GetAuthorsUseCase(IAuthorRepository authorRepository)
 {
-    public Task<List<AuthorDto>> ExecuteAsync(CancellationToken cancellationToken)
+    public async Task<List<AuthorDto>> ExecuteAsync(CancellationToken cancellationToken)
     {
-        return db.Authors
-            .AsNoTracking()
-            .Select(author => new AuthorDto(
-                author.Id,
-                author.FirstName,
-                author.LastName,
-                author.Country,
-                author.Books.Count))
-            .ToListAsync(cancellationToken);
+        var authors = await authorRepository.GetAllAsync(cancellationToken);
+        return authors.Select(ToDto).ToList();
+    }
+
+    private static AuthorDto ToDto(LibraryApi.Controllers.Entities.Author author)
+    {
+        return new AuthorDto(
+            author.Id,
+            author.FirstName,
+            author.LastName,
+            author.Country,
+            author.Books.Count);
     }
 }

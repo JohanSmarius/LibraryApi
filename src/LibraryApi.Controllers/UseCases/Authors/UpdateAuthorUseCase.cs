@@ -1,20 +1,17 @@
-using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
-using Microsoft.EntityFrameworkCore;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.UseCases.Authors;
 
-public class UpdateAuthorUseCase(LibraryDbContext db)
+public class UpdateAuthorUseCase(IAuthorRepository authorRepository)
 {
     public async Task<AuthorDto?> ExecuteAsync(
         int id,
         UpdateAuthorDto request,
         CancellationToken cancellationToken)
     {
-        var author = await db.Authors
-            .Include(author => author.Books)
-            .FirstOrDefaultAsync(author => author.Id == id, cancellationToken);
+        var author = await authorRepository.GetByIdWithBooksAsync(id, cancellationToken);
 
         if (author is null)
         {
@@ -25,7 +22,8 @@ public class UpdateAuthorUseCase(LibraryDbContext db)
         author.LastName = request.LastName;
         author.Country = request.Country;
 
-        await db.SaveChangesAsync(cancellationToken);
+        authorRepository.Update(author);
+        await authorRepository.SaveChangesAsync(cancellationToken);
 
         return ToDto(author);
     }

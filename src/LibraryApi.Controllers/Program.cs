@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
+using LibraryApi.Controllers.Repositories;
 using LibraryApi.Controllers.UseCases.Authors;
 using LibraryApi.Controllers.UseCases.Books;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,9 @@ var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
 
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlite(connectionString));
+
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 
 builder.Services.AddScoped<GetAuthorsUseCase>();
 builder.Services.AddScoped<GetAuthorUseCase>();

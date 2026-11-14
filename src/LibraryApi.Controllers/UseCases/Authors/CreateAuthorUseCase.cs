@@ -1,10 +1,10 @@
-using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.UseCases.Authors;
 
-public class CreateAuthorUseCase(LibraryDbContext db)
+public class CreateAuthorUseCase(IAuthorRepository authorRepository)
 {
     public async Task<AuthorDto> ExecuteAsync(
         CreateAuthorDto request,
@@ -17,8 +17,7 @@ public class CreateAuthorUseCase(LibraryDbContext db)
             Country = request.Country
         };
 
-        db.Authors.Add(author);
-        await db.SaveChangesAsync(cancellationToken);
+        await authorRepository.AddAsync(author, cancellationToken);
 
         return ToDto(author);
     }

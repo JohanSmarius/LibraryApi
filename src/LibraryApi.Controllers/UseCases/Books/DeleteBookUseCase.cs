@@ -1,19 +1,19 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.UseCases.Books;
 
-public class DeleteBookUseCase(LibraryDbContext db)
+public class DeleteBookUseCase(IBookRepository bookRepository)
 {
     public async Task<bool> ExecuteAsync(int id, CancellationToken cancellationToken)
     {
-        var book = await db.Books.FindAsync([id], cancellationToken);
+        var book = await bookRepository.GetByIdAsync(id, cancellationToken);
         if (book is null)
         {
             return false;
         }
 
-        db.Books.Remove(book);
-        await db.SaveChangesAsync(cancellationToken);
+        await bookRepository.RemoveAsync(id, cancellationToken);
+        await bookRepository.SaveChangesAsync(cancellationToken);
 
         return true;
     }
