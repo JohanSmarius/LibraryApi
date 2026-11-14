@@ -1,5 +1,5 @@
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.Services;
+using LibraryApi.Controllers.UseCases.Authors;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryApi.Controllers.Endpoints;
@@ -42,20 +42,20 @@ public static class AuthorsEndpoints
     }
 
     private static async Task<Ok<List<AuthorDto>>> GetAuthors(
-        IAuthorService authorService,
+        GetAuthorsUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var authors = await authorService.GetAuthorsAsync(cancellationToken);
+        var authors = await useCase.ExecuteAsync(cancellationToken);
 
         return TypedResults.Ok(authors);
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(
         int id,
-        IAuthorService authorService,
+        GetAuthorUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var author = await authorService.GetAuthorAsync(id, cancellationToken);
+        var author = await useCase.ExecuteAsync(id, cancellationToken);
 
         return author is null
             ? TypedResults.NotFound()
@@ -64,20 +64,20 @@ public static class AuthorsEndpoints
 
     private static async Task<CreatedAtRoute<AuthorDto>> CreateAuthor(
         CreateAuthorDto request,
-        IAuthorService authorService,
+        CreateAuthorUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var author = await authorService.CreateAuthorAsync(request, cancellationToken);
+        var author = await useCase.ExecuteAsync(request, cancellationToken);
         return TypedResults.CreatedAtRoute(author, nameof(GetAuthor), new { id = author.Id });
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> UpdateAuthor(
         int id,
         UpdateAuthorDto request,
-        IAuthorService authorService,
+        UpdateAuthorUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var author = await authorService.UpdateAuthorAsync(id, request, cancellationToken);
+        var author = await useCase.ExecuteAsync(id, request, cancellationToken);
 
         if (author is null)
         {
@@ -89,10 +89,10 @@ public static class AuthorsEndpoints
 
     private static async Task<Results<NoContent, NotFound>> DeleteAuthor(
         int id,
-        IAuthorService authorService,
+        DeleteAuthorUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var deleted = await authorService.DeleteAuthorAsync(id, cancellationToken);
+        var deleted = await useCase.ExecuteAsync(id, cancellationToken);
         if (!deleted)
         {
             return TypedResults.NotFound();

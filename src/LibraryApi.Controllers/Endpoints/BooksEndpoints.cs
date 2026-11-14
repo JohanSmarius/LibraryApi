@@ -1,5 +1,5 @@
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.Services;
+using LibraryApi.Controllers.UseCases.Books;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryApi.Controllers.Endpoints;
@@ -40,20 +40,20 @@ public static class BooksEndpoints
     }
 
     private static async Task<Ok<List<BookDto>>> GetBooks(
-        IBookService bookService,
+        GetBooksUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var books = await bookService.GetBooksAsync(cancellationToken);
+        var books = await useCase.ExecuteAsync(cancellationToken);
 
         return TypedResults.Ok(books);
     }
 
     private static async Task<Results<Ok<BookDto>, NotFound>> GetBook(
         int id,
-        IBookService bookService,
+        GetBookUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var book = await bookService.GetBookAsync(id, cancellationToken);
+        var book = await useCase.ExecuteAsync(id, cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -62,10 +62,10 @@ public static class BooksEndpoints
 
     private static async Task<Results<CreatedAtRoute<BookDto>, NotFound>> CreateBook(
         SaveBookDto request,
-        IBookService bookService,
+        CreateBookUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var book = await bookService.CreateBookAsync(request, cancellationToken);
+        var book = await useCase.ExecuteAsync(request, cancellationToken);
         if (book is null)
         {
             return TypedResults.NotFound();
@@ -77,10 +77,10 @@ public static class BooksEndpoints
     private static async Task<Results<Ok<BookDto>, NotFound>> UpdateBook(
         int id,
         SaveBookDto request,
-        IBookService bookService,
+        UpdateBookUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var book = await bookService.UpdateBookAsync(id, request, cancellationToken);
+        var book = await useCase.ExecuteAsync(id, request, cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -89,10 +89,10 @@ public static class BooksEndpoints
 
     private static async Task<Results<NoContent, NotFound>> DeleteBook(
         int id,
-        IBookService bookService,
+        DeleteBookUseCase useCase,
         CancellationToken cancellationToken)
     {
-        var deleted = await bookService.DeleteBookAsync(id, cancellationToken);
+        var deleted = await useCase.ExecuteAsync(id, cancellationToken);
 
         return deleted
             ? TypedResults.NoContent()

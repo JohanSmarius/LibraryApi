@@ -1,6 +1,7 @@
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
-using LibraryApi.Controllers.Services;
+using LibraryApi.Controllers.UseCases.Authors;
+using LibraryApi.Controllers.UseCases.Books;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -27,8 +28,21 @@ var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
 
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlite(connectionString));
-builder.Services.AddScoped<IAuthorService, AuthorService>();
-builder.Services.AddScoped<IBookService, BookService>();
+
+builder.Services.AddScoped<GetAuthorsUseCase>();
+builder.Services.AddScoped<GetAuthorUseCase>();
+builder.Services.AddScoped<CreateAuthorUseCase>();
+builder.Services.AddScoped<UpdateAuthorUseCase>();
+builder.Services.AddScoped<DeleteAuthorUseCase>();
+
+builder.Services.AddScoped<GetBooksUseCase>();
+builder.Services.AddScoped<GetBookUseCase>();
+builder.Services.AddScoped<CreateBookUseCase>();
+builder.Services.AddScoped<UpdateBookUseCase>();
+builder.Services.AddScoped<DeleteBookUseCase>();
+builder.Services.AddScoped<GetBooksForAuthorUseCase>();
+builder.Services.AddScoped<GetBookForAuthorUseCase>();
+builder.Services.AddScoped<CreateBookForAuthorUseCase>();
 
 var app = builder.Build();
 
