@@ -24,16 +24,15 @@ public class CreateBookForAuthorUseCase(
             Title = request.Title,
             PublicationYear = request.PublicationYear,
             Isbn = request.Isbn,
-            AuthorId = authorId,
-            Author = author
+            AuthorId = authorId
         };
 
         await bookRepository.AddAsync(book, cancellationToken);
 
-        return ToDto(book);
+        return ToDto(book, author);
     }
 
-    private static BookDto ToDto(Book book)
+    private static BookDto ToDto(Book book, Author author)
     {
         return new BookDto(
             book.Id,
@@ -41,6 +40,6 @@ public class CreateBookForAuthorUseCase(
             book.PublicationYear,
             book.Isbn,
             book.AuthorId,
-            $"{book.Author!.FirstName} {book.Author.LastName}");
+            $"{author.FirstName} {author.LastName}");
     }
 }
