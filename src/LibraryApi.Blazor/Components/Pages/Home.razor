@@ -1,0 +1,75 @@
+@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<h1>Books</h1>
+
+@if (_loading)
+{
+    <p>Loading books...</p>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else if (_books is null || _books.Count == 0)
+{
+    <p>No books found.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Year</th>
+                <th>ISBN</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in _books)
+            {
+                <tr>
+                    <td>@book.Title</td>
+                    <td>@book.AuthorFullName</td>
+                    <td>@book.PublicationYear</td>
+                    <td>@book.Isbn</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private readonly IHttpClientFactory _httpClientFactory;
+    private List<BookDto>? _books;
+    private bool _loading = true;
+    private string? _error;
+
+    public Home(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("LibraryApi");
+            _books = await client.GetFromJsonAsync<List<BookDto>>("/api/books") ?? new();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load books: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

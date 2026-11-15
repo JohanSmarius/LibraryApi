@@ -1,0 +1,127 @@
+@page "/authors"
+@rendermode InteractiveServer
+
+<PageTitle>Authors</PageTitle>
+
+<h1>Authors</h1>
+
+@if (_loading)
+{
+    <p>Loading authors...</p>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else
+{
+    <div class="mb-4">
+        <h3>Add New Author</h3>
+        <EditForm Model="@_newAuthor" OnValidSubmit="@HandleCreateAuthor">
+            <DataAnnotationsValidator />
+            <div class="mb-2">
+                <label>First Name</label>
+                <InputText @bind-Value="@_newAuthor.FirstName" class="form-control" />
+            </div>
+            <div class="mb-2">
+                <label>Last Name</label>
+                <InputText @bind-Value="@_newAuthor.LastName" class="form-control" />
+            </div>
+            <div class="mb-2">
+                <label>Country</label>
+                <InputText @bind-Value="@_newAuthor.Country" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary">Add Author</button>
+        </EditForm>
+    </div>
+
+    @if (_authors is null || _authors.Count == 0)
+    {
+        <p>No authors found.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Country</th>
+                    <th>Books</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var author in _authors)
+                {
+                    <tr>
+                        <td>@author.FirstName</td>
+                        <td>@author.LastName</td>
+                        <td>@author.Country</td>
+                        <td>@author.BookCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private readonly IHttpClientFactory _httpClientFactory;
+    private List<AuthorDto>? _authors;
+    private CreateAuthorDto _newAuthor = new();
+    private bool _loading = true;
+    private string? _error;
+
+    public Authors(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAuthors();
+    }
+
+    private async Task LoadAuthors()
+    {
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("LibraryApi");
+            _authors = await client.GetFromJsonAsync<List<AuthorDto>>("/api/authors") ?? new();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load authors: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleCreateAuthor()
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("LibraryApi");
+            var response = await client.PostAsJsonAsync("/api/authors", _newAuthor);
+            if (response.IsSuccessStatusCode)
+            {
+                _newAuthor = new();
+                await LoadAuthors();
+            }
+            else
+            {
+                _error = $"Failed to create author: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to create author: {ex.Message}";
+        }
+    }
+}

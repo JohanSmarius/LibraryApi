@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
+using LibraryApi.Controllers.Middleware;
 using LibraryApi.Controllers.Repositories;
 using LibraryApi.Controllers.UseCases.Authors;
 using LibraryApi.Controllers.UseCases.Books;
@@ -70,6 +71,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Protect all API endpoints with API key authentication
+app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapAuthorsEndpoints();
 app.MapBooksEndpoints();

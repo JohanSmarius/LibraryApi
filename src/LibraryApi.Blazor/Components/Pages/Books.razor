@@ -1,0 +1,145 @@
+@page "/books"
+@rendermode InteractiveServer
+
+<PageTitle>Books</PageTitle>
+
+<h1>Books</h1>
+
+@if (_loading)
+{
+    <p>Loading books...</p>
+}
+else if (_error is not null)
+{
+    <div class="alert alert-danger">@_error</div>
+}
+else
+{
+    <div class="mb-4">
+        <h3>Add New Book</h3>
+        <EditForm Model="@_newBook" OnValidSubmit="@HandleCreateBook">
+            <DataAnnotationsValidator />
+            <div class="mb-2">
+                <label>Title</label>
+                <InputText @bind-Value="@_newBook.Title" class="form-control" />
+            </div>
+            <div class="mb-2">
+                <label>Publication Year</label>
+                <InputNumber @bind-Value="@_newBook.PublicationYear" class="form-control" />
+            </div>
+            <div class="mb-2">
+                <label>ISBN</label>
+                <InputText @bind-Value="@_newBook.Isbn" class="form-control" />
+            </div>
+            <div class="mb-2">
+                <label>Author</label>
+                <InputSelect @bind-Value="@_newBook.AuthorId" class="form-control">
+                    <option value="0">-- Select Author --</option>
+                    @foreach (var author in _authors ?? Enumerable.Empty<AuthorDto>())
+                    {
+                        <option value="@author.Id">@author.FirstName @author.LastName</option>
+                    }
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled="@(_newBook.AuthorId == 0)">Add Book</button>
+        </EditForm>
+    </div>
+
+    @if (_books is null || _books.Count == 0)
+    {
+        <p>No books found.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>ISBN</th>
+                    <th>Author</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in _books)
+                {
+                    <tr>
+                        <td>@book.Title</td>
+                        <td>@book.PublicationYear</td>
+                        <td>@book.Isbn</td>
+                        <td>@book.AuthorFullName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private readonly IHttpClientFactory _httpClientFactory;
+    private List<BookDto>? _books;
+    private List<AuthorDto>? _authors;
+    private CreateBookDto _newBook = new();
+    private bool _loading = true;
+    private string? _error;
+
+    public Books(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("LibraryApi");
+            var booksTask = client.GetFromJsonAsync<List<BookDto>>("/api/books");
+            var authorsTask = client.GetFromJsonAsync<List<AuthorDto>>("/api/authors");
+            await Task.WhenAll(booksTask, authorsTask);
+            _books = booksTask.Result ?? new();
+            _authors = authorsTask.Result ?? new();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load data: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleCreateBook()
+    {
+        if (_newBook.AuthorId == 0)
+            return;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("LibraryApi");
+            var response = await client.PostAsJsonAsync("/api/books", _newBook);
+            if (response.IsSuccessStatusCode)
+            {
+                _newBook = new();
+                await LoadData();
+            }
+            else
+            {
+                _error = $"Failed to create book: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to create book: {ex.Message}";
+        }
+    }
+}

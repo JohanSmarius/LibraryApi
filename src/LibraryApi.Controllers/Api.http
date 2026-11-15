@@ -1,0 +1,106 @@
+### Library API - HTTP Client Requests
+### Base URL: https://localhost:5001
+
+@baseUrl = http://localhost:5080
+@apiKey = Test123!
+
+##############################
+# Authors
+##############################
+
+### Get All Authors
+GET {{baseUrl}}/api/authors
+X-API-Key: {{apiKey}}
+
+### Get Author by ID
+GET {{baseUrl}}/api/authors/1
+X-API-Key: {{apiKey}}
+
+### Create Author
+POST {{baseUrl}}/api/authors
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "firstName": "J.K.",
+  "lastName": "Rowling",
+  "country": "United Kingdom"
+}
+
+### Update Author
+PUT {{baseUrl}}/api/authors/1
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "firstName": "J.K.",
+  "lastName": "Rowling",
+  "country": "United Kingdom"
+}
+
+### Delete Author
+DELETE {{baseUrl}}/api/authors/1
+X-API-Key: {{apiKey}}
+
+##############################
+# Books
+##############################
+
+### Get All Books
+GET {{baseUrl}}/api/books
+X-API-Key: {{apiKey}}
+
+### Get Book by ID
+GET {{baseUrl}}/api/books/1
+X-API-Key: {{apiKey}}
+
+### Create Book
+POST {{baseUrl}}/api/books
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "title": "Harry Potter and the Philosopher's Stone",
+  "publicationYear": 1997,
+  "isbn": "978-0747532699",
+  "authorId": 1
+}
+
+### Update Book
+PUT {{baseUrl}}/api/books/1
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "title": "Harry Potter and the Philosopher's Stone",
+  "publicationYear": 1997,
+  "isbn": "978-0747532699",
+  "authorId": 1
+}
+
+### Delete Book
+DELETE {{baseUrl}}/api/books/1
+X-API-Key: {{apiKey}}
+
+##############################
+# Author Books (Nested)
+##############################
+
+### Get Books for Author
+GET {{baseUrl}}/api/authors/1/books
+X-API-Key: {{apiKey}}
+
+### Get Book for Author
+GET {{baseUrl}}/api/authors/1/books/1
+X-API-Key: {{apiKey}}
+
+### Create Book for Author
+POST {{baseUrl}}/api/authors/1/books
+Content-Type: application/json
+X-API-Key: {{apiKey}}
+
+{
+  "title": "Harry Potter and the Chamber of Secrets",
+  "publicationYear": 1998,
+  "isbn": "978-0747538486"
+}
