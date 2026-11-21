@@ -2,15 +2,20 @@ using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryApi.Controllers.UseCases.Books;
+namespace LibraryApi.Controllers.Queries.Books;
 
-public class GetBookUseCase(LibraryDbContext db)
+public record GetBookForAuthorQuery(int AuthorId, int BookId);
+
+public class GetBookForAuthorQueryHandler(LibraryDbContext db)
 {
-    public Task<BookDto?> ExecuteAsync(int id, CancellationToken cancellationToken)
+    public Task<BookDto?> HandleAsync(GetBookForAuthorQuery query, CancellationToken cancellationToken)
     {
+        var authorId = query.AuthorId;
+        var bookId = query.BookId;
+
         return db.Books
             .AsNoTracking()
-            .Where(book => book.Id == id)
+            .Where(book => book.Id == bookId && book.AuthorId == authorId)
             .Select(book => new BookDto(
                 book.Id,
                 book.Title,

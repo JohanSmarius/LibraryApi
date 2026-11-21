@@ -3,15 +3,17 @@ using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryApi.Controllers.UseCases.Authors;
+namespace LibraryApi.Controllers.Commands.Authors;
 
-public class UpdateAuthorUseCase(LibraryDbContext db)
+public record UpdateAuthorCommand(int Id, UpdateAuthorDto Request);
+
+public class UpdateAuthorCommandHandler(LibraryDbContext db)
 {
-    public async Task<AuthorDto?> ExecuteAsync(
-        int id,
-        UpdateAuthorDto request,
-        CancellationToken cancellationToken)
+    public async Task<AuthorDto?> HandleAsync(UpdateAuthorCommand command, CancellationToken cancellationToken)
     {
+        var id = command.Id;
+        var request = command.Request;
+
         var author = await db.Authors
             .Include(author => author.Books)
             .FirstOrDefaultAsync(author => author.Id == id, cancellationToken);

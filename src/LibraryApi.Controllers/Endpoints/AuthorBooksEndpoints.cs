@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.UseCases.Books;
+using LibraryApi.Controllers.Commands.Books;
+using LibraryApi.Controllers.Queries.Books;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryApi.Controllers.Endpoints;
@@ -32,10 +33,10 @@ public static class AuthorBooksEndpoints
 
     private static async Task<Results<Ok<List<BookDto>>, NotFound>> GetBooksForAuthor(
         int authorId,
-        GetBooksForAuthorUseCase useCase,
+        GetBooksForAuthorQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var books = await useCase.ExecuteAsync(authorId, cancellationToken);
+        var books = await handler.HandleAsync(new GetBooksForAuthorQuery(authorId), cancellationToken);
 
         return books is null
             ? TypedResults.NotFound()
@@ -45,10 +46,10 @@ public static class AuthorBooksEndpoints
     private static async Task<Results<Ok<BookDto>, NotFound>> GetBookForAuthor(
         int authorId,
         int bookId,
-        GetBookForAuthorUseCase useCase,
+        GetBookForAuthorQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var book = await useCase.ExecuteAsync(authorId, bookId, cancellationToken);
+        var book = await handler.HandleAsync(new GetBookForAuthorQuery(authorId, bookId), cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -58,13 +59,11 @@ public static class AuthorBooksEndpoints
     private static async Task<Results<CreatedAtRoute<BookDto>, NotFound>> CreateBookForAuthor(
         int authorId,
         CreateBookDto request,
-        CreateBookForAuthorUseCase useCase,
+        CreateBookForAuthorCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var book = await useCase.ExecuteAsync(
-            authorId,
-            request,
-            cancellationToken);
+        var book = await handler.HandleAsync(
+            new CreateBookForAuthorCommand(authorId, request), cancellationToken);
 
         if (book is null)
         {

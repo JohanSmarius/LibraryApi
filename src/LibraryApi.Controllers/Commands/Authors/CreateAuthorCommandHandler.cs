@@ -2,14 +2,16 @@ using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
 
-namespace LibraryApi.Controllers.UseCases.Authors;
+namespace LibraryApi.Controllers.Commands.Authors;
 
-public class CreateAuthorUseCase(LibraryDbContext db)
+public record CreateAuthorCommand(CreateAuthorDto Request);
+
+public class CreateAuthorCommandHandler(LibraryDbContext db)
 {
-    public async Task<AuthorDto> ExecuteAsync(
-        CreateAuthorDto request,
-        CancellationToken cancellationToken)
+    public async Task<AuthorDto> HandleAsync(CreateAuthorCommand command, CancellationToken cancellationToken)
     {
+        var request = command.Request;
+
         var author = new Author
         {
             FirstName = request.FirstName,

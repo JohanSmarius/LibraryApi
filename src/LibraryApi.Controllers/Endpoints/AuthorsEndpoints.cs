@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.UseCases.Authors;
+using LibraryApi.Controllers.Commands.Authors;
+using LibraryApi.Controllers.Queries.Authors;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryApi.Controllers.Endpoints;
@@ -42,20 +43,20 @@ public static class AuthorsEndpoints
     }
 
     private static async Task<Ok<List<AuthorDto>>> GetAuthors(
-        GetAuthorsUseCase useCase,
+        GetAuthorsQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var authors = await useCase.ExecuteAsync(cancellationToken);
+        var authors = await handler.HandleAsync(new GetAuthorsQuery(), cancellationToken);
 
         return TypedResults.Ok(authors);
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> GetAuthor(
         int id,
-        GetAuthorUseCase useCase,
+        GetAuthorQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var author = await useCase.ExecuteAsync(id, cancellationToken);
+        var author = await handler.HandleAsync(new GetAuthorQuery(id), cancellationToken);
 
         return author is null
             ? TypedResults.NotFound()
@@ -64,20 +65,20 @@ public static class AuthorsEndpoints
 
     private static async Task<CreatedAtRoute<AuthorDto>> CreateAuthor(
         CreateAuthorDto request,
-        CreateAuthorUseCase useCase,
+        CreateAuthorCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var author = await useCase.ExecuteAsync(request, cancellationToken);
+        var author = await handler.HandleAsync(new CreateAuthorCommand(request), cancellationToken);
         return TypedResults.CreatedAtRoute(author, nameof(GetAuthor), new { id = author.Id });
     }
 
     private static async Task<Results<Ok<AuthorDto>, NotFound>> UpdateAuthor(
         int id,
         UpdateAuthorDto request,
-        UpdateAuthorUseCase useCase,
+        UpdateAuthorCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var author = await useCase.ExecuteAsync(id, request, cancellationToken);
+        var author = await handler.HandleAsync(new UpdateAuthorCommand(id, request), cancellationToken);
 
         if (author is null)
         {
@@ -89,10 +90,10 @@ public static class AuthorsEndpoints
 
     private static async Task<Results<NoContent, NotFound>> DeleteAuthor(
         int id,
-        DeleteAuthorUseCase useCase,
+        DeleteAuthorCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var deleted = await useCase.ExecuteAsync(id, cancellationToken);
+        var deleted = await handler.HandleAsync(new DeleteAuthorCommand(id), cancellationToken);
         if (!deleted)
         {
             return TypedResults.NotFound();

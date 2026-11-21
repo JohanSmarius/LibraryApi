@@ -6,9 +6,10 @@ Entity Framework Core.
 ## Architecture
 
 - Feature-based endpoint modules in `Endpoints/` handle HTTP concerns and
-  delegate application and data operations to scoped use cases
+  delegate application operations to scoped command and query handlers
 - Route groups for author, nested author-book, and flat book routes
-- Author and book use cases in `UseCases/` use `LibraryDbContext` directly
+- Author and book commands and queries use `LibraryDbContext` directly; commands
+  change state and queries return read-only projections
 - DataAnnotations request validation through .NET 10 `AddValidation()`
 - Strongly typed HTTP results for accurate OpenAPI response metadata
 - Built-in `Microsoft.AspNetCore.OpenApi` generation using OpenAPI 3.1

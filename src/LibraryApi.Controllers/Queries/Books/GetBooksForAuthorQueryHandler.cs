@@ -2,14 +2,16 @@ using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryApi.Controllers.UseCases.Books;
+namespace LibraryApi.Controllers.Queries.Books;
 
-public class GetBooksForAuthorUseCase(LibraryDbContext db)
+public record GetBooksForAuthorQuery(int AuthorId);
+
+public class GetBooksForAuthorQueryHandler(LibraryDbContext db)
 {
-    public async Task<List<BookDto>?> ExecuteAsync(
-        int authorId,
-        CancellationToken cancellationToken)
+    public async Task<List<BookDto>?> HandleAsync(GetBooksForAuthorQuery query, CancellationToken cancellationToken)
     {
+        var authorId = query.AuthorId;
+
         var authorExists = await db.Authors
             .AsNoTracking()
             .AnyAsync(author => author.Id == authorId, cancellationToken);

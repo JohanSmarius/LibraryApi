@@ -1,5 +1,6 @@
 using LibraryApi.Controllers.Dtos;
-using LibraryApi.Controllers.UseCases.Books;
+using LibraryApi.Controllers.Commands.Books;
+using LibraryApi.Controllers.Queries.Books;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LibraryApi.Controllers.Endpoints;
@@ -40,20 +41,20 @@ public static class BooksEndpoints
     }
 
     private static async Task<Ok<List<BookDto>>> GetBooks(
-        GetBooksUseCase useCase,
+        GetBooksQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var books = await useCase.ExecuteAsync(cancellationToken);
+        var books = await handler.HandleAsync(new GetBooksQuery(), cancellationToken);
 
         return TypedResults.Ok(books);
     }
 
     private static async Task<Results<Ok<BookDto>, NotFound>> GetBook(
         int id,
-        GetBookUseCase useCase,
+        GetBookQueryHandler handler,
         CancellationToken cancellationToken)
     {
-        var book = await useCase.ExecuteAsync(id, cancellationToken);
+        var book = await handler.HandleAsync(new GetBookQuery(id), cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -62,10 +63,10 @@ public static class BooksEndpoints
 
     private static async Task<Results<CreatedAtRoute<BookDto>, NotFound>> CreateBook(
         SaveBookDto request,
-        CreateBookUseCase useCase,
+        CreateBookCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var book = await useCase.ExecuteAsync(request, cancellationToken);
+        var book = await handler.HandleAsync(new CreateBookCommand(request), cancellationToken);
         if (book is null)
         {
             return TypedResults.NotFound();
@@ -77,10 +78,10 @@ public static class BooksEndpoints
     private static async Task<Results<Ok<BookDto>, NotFound>> UpdateBook(
         int id,
         SaveBookDto request,
-        UpdateBookUseCase useCase,
+        UpdateBookCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var book = await useCase.ExecuteAsync(id, request, cancellationToken);
+        var book = await handler.HandleAsync(new UpdateBookCommand(id, request), cancellationToken);
 
         return book is null
             ? TypedResults.NotFound()
@@ -89,10 +90,10 @@ public static class BooksEndpoints
 
     private static async Task<Results<NoContent, NotFound>> DeleteBook(
         int id,
-        DeleteBookUseCase useCase,
+        DeleteBookCommandHandler handler,
         CancellationToken cancellationToken)
     {
-        var deleted = await useCase.ExecuteAsync(id, cancellationToken);
+        var deleted = await handler.HandleAsync(new DeleteBookCommand(id), cancellationToken);
 
         return deleted
             ? TypedResults.NoContent()

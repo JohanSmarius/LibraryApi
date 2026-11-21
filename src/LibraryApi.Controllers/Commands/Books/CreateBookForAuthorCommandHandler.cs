@@ -2,15 +2,18 @@ using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
 
-namespace LibraryApi.Controllers.UseCases.Books;
+namespace LibraryApi.Controllers.Commands.Books;
 
-public class CreateBookUseCase(LibraryDbContext db)
+public record CreateBookForAuthorCommand(int AuthorId, CreateBookDto Request);
+
+public class CreateBookForAuthorCommandHandler(LibraryDbContext db)
 {
-    public async Task<BookDto?> ExecuteAsync(
-        SaveBookDto request,
-        CancellationToken cancellationToken)
+    public async Task<BookDto?> HandleAsync(CreateBookForAuthorCommand command, CancellationToken cancellationToken)
     {
-        var author = await db.Authors.FindAsync([request.AuthorId], cancellationToken);
+        var authorId = command.AuthorId;
+        var request = command.Request;
+
+        var author = await db.Authors.FindAsync([authorId], cancellationToken);
         if (author is null)
         {
             return null;
@@ -21,18 +24,13 @@ public class CreateBookUseCase(LibraryDbContext db)
             Title = request.Title,
             PublicationYear = request.PublicationYear,
             Isbn = request.Isbn,
-            AuthorId = request.AuthorId,
+            AuthorId = authorId,
             Author = author
         };
 
         db.Books.Add(book);
         await db.SaveChangesAsync(cancellationToken);
 
-        return ToDto(book);
-    }
-
-    private static BookDto ToDto(Book book)
-    {
         return new BookDto(
             book.Id,
             book.Title,

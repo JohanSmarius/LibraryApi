@@ -1,7 +1,9 @@
 using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Endpoints;
-using LibraryApi.Controllers.UseCases.Authors;
-using LibraryApi.Controllers.UseCases.Books;
+using LibraryApi.Controllers.Commands.Authors;
+using LibraryApi.Controllers.Commands.Books;
+using LibraryApi.Controllers.Queries.Authors;
+using LibraryApi.Controllers.Queries.Books;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -29,20 +31,20 @@ var connectionString = builder.Configuration.GetConnectionString("LibraryDb")
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlite(connectionString));
 
-builder.Services.AddScoped<GetAuthorsUseCase>();
-builder.Services.AddScoped<GetAuthorUseCase>();
-builder.Services.AddScoped<CreateAuthorUseCase>();
-builder.Services.AddScoped<UpdateAuthorUseCase>();
-builder.Services.AddScoped<DeleteAuthorUseCase>();
+builder.Services.AddScoped<GetAuthorsQueryHandler>();
+builder.Services.AddScoped<GetAuthorQueryHandler>();
+builder.Services.AddScoped<CreateAuthorCommandHandler>();
+builder.Services.AddScoped<UpdateAuthorCommandHandler>();
+builder.Services.AddScoped<DeleteAuthorCommandHandler>();
 
-builder.Services.AddScoped<GetBooksUseCase>();
-builder.Services.AddScoped<GetBookUseCase>();
-builder.Services.AddScoped<CreateBookUseCase>();
-builder.Services.AddScoped<UpdateBookUseCase>();
-builder.Services.AddScoped<DeleteBookUseCase>();
-builder.Services.AddScoped<GetBooksForAuthorUseCase>();
-builder.Services.AddScoped<GetBookForAuthorUseCase>();
-builder.Services.AddScoped<CreateBookForAuthorUseCase>();
+builder.Services.AddScoped<GetBooksQueryHandler>();
+builder.Services.AddScoped<GetBookQueryHandler>();
+builder.Services.AddScoped<CreateBookCommandHandler>();
+builder.Services.AddScoped<UpdateBookCommandHandler>();
+builder.Services.AddScoped<DeleteBookCommandHandler>();
+builder.Services.AddScoped<GetBooksForAuthorQueryHandler>();
+builder.Services.AddScoped<GetBookForAuthorQueryHandler>();
+builder.Services.AddScoped<CreateBookForAuthorCommandHandler>();
 
 var app = builder.Build();
 

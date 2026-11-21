@@ -2,11 +2,13 @@ using LibraryApi.Controllers.Data;
 using LibraryApi.Controllers.Dtos;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryApi.Controllers.UseCases.Books;
+namespace LibraryApi.Controllers.Queries.Books;
 
-public class GetBooksUseCase(LibraryDbContext db)
+public record GetBooksQuery();
+
+public class GetBooksQueryHandler(LibraryDbContext db)
 {
-    public Task<List<BookDto>> ExecuteAsync(CancellationToken cancellationToken)
+    public Task<List<BookDto>> HandleAsync(GetBooksQuery query, CancellationToken cancellationToken)
     {
         return db.Books
             .AsNoTracking()

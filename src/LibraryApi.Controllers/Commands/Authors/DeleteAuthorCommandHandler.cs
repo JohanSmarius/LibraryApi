@@ -1,11 +1,15 @@
 using LibraryApi.Controllers.Data;
 
-namespace LibraryApi.Controllers.UseCases.Authors;
+namespace LibraryApi.Controllers.Commands.Authors;
 
-public class DeleteAuthorUseCase(LibraryDbContext db)
+public record DeleteAuthorCommand(int Id);
+
+public class DeleteAuthorCommandHandler(LibraryDbContext db)
 {
-    public async Task<bool> ExecuteAsync(int id, CancellationToken cancellationToken)
+    public async Task<bool> HandleAsync(DeleteAuthorCommand command, CancellationToken cancellationToken)
     {
+        var id = command.Id;
+
         var author = await db.Authors.FindAsync([id], cancellationToken);
         if (author is null)
         {
