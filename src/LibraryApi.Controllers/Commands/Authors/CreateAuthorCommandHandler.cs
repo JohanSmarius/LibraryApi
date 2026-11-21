@@ -1,4 +1,4 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
 
@@ -6,7 +6,7 @@ namespace LibraryApi.Controllers.Commands.Authors;
 
 public record CreateAuthorCommand(CreateAuthorDto Request);
 
-public class CreateAuthorCommandHandler(LibraryDbContext db)
+public class CreateAuthorCommandHandler(IAuthorRepository authors)
 {
     public async Task<AuthorDto> HandleAsync(CreateAuthorCommand command, CancellationToken cancellationToken)
     {
@@ -19,8 +19,8 @@ public class CreateAuthorCommandHandler(LibraryDbContext db)
             Country = request.Country
         };
 
-        db.Authors.Add(author);
-        await db.SaveChangesAsync(cancellationToken);
+        authors.Add(author);
+        await authors.SaveChangesAsync(cancellationToken);
 
         return ToDto(author);
     }

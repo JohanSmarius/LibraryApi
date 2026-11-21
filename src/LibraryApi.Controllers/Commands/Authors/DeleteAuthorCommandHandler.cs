@@ -1,23 +1,23 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.Commands.Authors;
 
 public record DeleteAuthorCommand(int Id);
 
-public class DeleteAuthorCommandHandler(LibraryDbContext db)
+public class DeleteAuthorCommandHandler(IAuthorRepository authors)
 {
     public async Task<bool> HandleAsync(DeleteAuthorCommand command, CancellationToken cancellationToken)
     {
         var id = command.Id;
 
-        var author = await db.Authors.FindAsync([id], cancellationToken);
+        var author = await authors.FindAsync(id, cancellationToken);
         if (author is null)
         {
             return false;
         }
 
-        db.Authors.Remove(author);
-        await db.SaveChangesAsync(cancellationToken);
+        authors.Remove(author);
+        await authors.SaveChangesAsync(cancellationToken);
 
         return true;
     }

@@ -1,4 +1,4 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 using LibraryApi.Controllers.Dtos;
 using LibraryApi.Controllers.Entities;
 
@@ -6,14 +6,14 @@ namespace LibraryApi.Controllers.Commands.Books;
 
 public record CreateBookForAuthorCommand(int AuthorId, CreateBookDto Request);
 
-public class CreateBookForAuthorCommandHandler(LibraryDbContext db)
+public class CreateBookForAuthorCommandHandler(IAuthorRepository authors, IBookRepository books)
 {
     public async Task<BookDto?> HandleAsync(CreateBookForAuthorCommand command, CancellationToken cancellationToken)
     {
         var authorId = command.AuthorId;
         var request = command.Request;
 
-        var author = await db.Authors.FindAsync([authorId], cancellationToken);
+        var author = await authors.FindAsync(authorId, cancellationToken);
         if (author is null)
         {
             return null;
@@ -28,8 +28,8 @@ public class CreateBookForAuthorCommandHandler(LibraryDbContext db)
             Author = author
         };
 
-        db.Books.Add(book);
-        await db.SaveChangesAsync(cancellationToken);
+        books.Add(book);
+        await books.SaveChangesAsync(cancellationToken);
 
         return new BookDto(
             book.Id,

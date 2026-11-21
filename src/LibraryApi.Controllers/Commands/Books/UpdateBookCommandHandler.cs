@@ -1,25 +1,24 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 using LibraryApi.Controllers.Dtos;
-using Microsoft.EntityFrameworkCore;
 
 namespace LibraryApi.Controllers.Commands.Books;
 
 public record UpdateBookCommand(int Id, SaveBookDto Request);
 
-public class UpdateBookCommandHandler(LibraryDbContext db)
+public class UpdateBookCommandHandler(IAuthorRepository authors, IBookRepository books)
 {
     public async Task<BookDto?> HandleAsync(UpdateBookCommand command, CancellationToken cancellationToken)
     {
         var id = command.Id;
         var request = command.Request;
 
-        var book = await db.Books.FindAsync([id], cancellationToken);
+        var book = await books.FindAsync(id, cancellationToken);
         if (book is null)
         {
             return null;
         }
 
-        var author = await db.Authors.FindAsync([request.AuthorId], cancellationToken);
+        var author = await authors.FindAsync(request.AuthorId, cancellationToken);
         if (author is null)
         {
             return null;
@@ -31,7 +30,7 @@ public class UpdateBookCommandHandler(LibraryDbContext db)
         book.AuthorId = request.AuthorId;
         book.Author = author;
 
-        await db.SaveChangesAsync(cancellationToken);
+        await books.SaveChangesAsync(cancellationToken);
 
         return new BookDto(
             book.Id,

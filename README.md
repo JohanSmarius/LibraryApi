@@ -8,8 +8,8 @@ Entity Framework Core.
 - Feature-based endpoint modules in `Endpoints/` handle HTTP concerns and
   delegate application operations to scoped command and query handlers
 - Route groups for author, nested author-book, and flat book routes
-- Author and book commands and queries use `LibraryDbContext` directly; commands
-  change state and queries return read-only projections
+- Author and book command and query handlers use scoped repository interfaces;
+  EF Core repositories persist changes and provide read-only projections
 - DataAnnotations request validation through .NET 10 `AddValidation()`
 - Strongly typed HTTP results for accurate OpenAPI response metadata
 - Built-in `Microsoft.AspNetCore.OpenApi` generation using OpenAPI 3.1
@@ -53,6 +53,8 @@ Requires the .NET 10 SDK.
 dotnet restore
 dotnet run --project src/LibraryApi.Controllers
 ```
+
+Run the xUnit tests with `dotnet test LibraryApi.sln`.
 
 In Development:
 

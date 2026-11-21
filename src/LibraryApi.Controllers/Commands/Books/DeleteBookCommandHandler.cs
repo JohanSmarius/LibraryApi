@@ -1,23 +1,23 @@
-using LibraryApi.Controllers.Data;
+using LibraryApi.Controllers.Repositories;
 
 namespace LibraryApi.Controllers.Commands.Books;
 
 public record DeleteBookCommand(int Id);
 
-public class DeleteBookCommandHandler(LibraryDbContext db)
+public class DeleteBookCommandHandler(IBookRepository books)
 {
     public async Task<bool> HandleAsync(DeleteBookCommand command, CancellationToken cancellationToken)
     {
         var id = command.Id;
 
-        var book = await db.Books.FindAsync([id], cancellationToken);
+        var book = await books.FindAsync(id, cancellationToken);
         if (book is null)
         {
             return false;
         }
 
-        db.Books.Remove(book);
-        await db.SaveChangesAsync(cancellationToken);
+        books.Remove(book);
+        await books.SaveChangesAsync(cancellationToken);
 
         return true;
     }
